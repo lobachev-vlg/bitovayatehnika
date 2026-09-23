@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ремонт бытовой техники</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="hero">
+        <div class="container hero-content">
+            <div>
+                <p class="badge">Сервисный центр</p>
+                <h1>Ремонт бытовой техники с выездом на дом</h1>
+                <p class="hero-text">
+                    Быстро, аккуратно и с гарантией. Ремонтируем стиральные машины, холодильники,
+                    плиты, посудомойки, микроволновки и другую технику.
+                </p>
+                <div class="hero-actions">
+                    <a href="#form" class="btn btn-primary">Оставить заявку</a>
+                    <a href="#services" class="btn btn-secondary">Наши услуги</a>
+                </div>
+            </div>
+            <div class="hero-card">
+                <h3>Почему выбирают нас</h3>
+                <ul>
+                    <li>Выезд в день обращения</li>
+                    <li>Диагностика и ремонт</li>
+                    <li>Гарантия на работу</li>
+                    <li>Честные цены</li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="section container" id="services">
+            <h2>Наши услуги</h2>
+            <div class="cards">
+                <div class="card">
+                    <h3>Стиральные машины</h3>
+                    <p>Устраняем протечки, шум, проблемы с отжимом и сливом.</p>
+                </div>
+                <div class="card">
+                    <h3>Холодильники</h3>
+                    <p>Ремонт компрессора, термостата, утечек фреона и электроники.</p>
+                </div>
+                <div class="card">
+                    <h3>Плиты и духовки</h3>
+                    <p>Починим нагрев, переключатели, проводку и блок управления.</p>
+                </div>
+                <div class="card">
+                    <h3>Микроволновки</h3>
+                    <p>Ремонт магнетрона, кнопок, дверцы и платы управления.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section container">
+            <h2>Как мы работаем</h2>
+            <div class="steps">
+                <div class="step"><span>1</span><p>Вы оставляете заявку</p></div>
+                <div class="step"><span>2</span><p>Мастер связывается с вами</p></div>
+                <div class="step"><span>3</span><p>Проводим диагностику</p></div>
+                <div class="step"><span>4</span><p>Выполняем ремонт</p></div>
+            </div>
+        </section>
+
+        <section class="section container form-section" id="form">
+            <h2>Оставить заявку</h2>
+
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                <p class="success">{{ messages[0] }}</p>
+              {% endif %}
+            {% endwith %}
+
+            <form action="/submit" method="POST" class="request-form">
+                <div class="form-grid">
+                    <input type="text" name="name" placeholder="Ваше имя" required>
+                    <input type="text" name="phone" placeholder="Телефон" required>
+                    <input type="text" name="device" placeholder="Какой прибор сломался?" required>
+                    <input type="text" name="address" placeholder="Адрес" required>
+                </div>
+                <textarea name="problem" placeholder="Опишите проблему" required></textarea>
+                <button type="submit" class="btn btn-primary">Отправить заявку</button>
+            </form>
+        </section>
+    </main>
+</body>
+</html>
