@@ -1,30 +1,30 @@
-from flask import Flask, render_template, request, redirect, flash
-import csv
 import os
+from flask import Flask, render_template, request, redirect, flash
 
 app = Flask(__name__)
-app.secret_key = "secret-key"
+app.secret_key = os.environ.get("SECRET_KEY", "change-me")
 
 @app.route("/")
 def index():
     return render_template("index.html")
 
-@app.route("/submit", methods=["POST"])
-def submit():
-    name = request.form.get("name")
-    phone = request.form.get("phone")
-    device = request.form.get("device")
-    problem = request.form.get("problem")
+@app.route("/request", methods=["POST"])
+def make_request():
+    name = request.form.get("name", "").strip()
+    phone = request.form.get("phone", "").strip()
+    device = request.form.get("device", "").strip()
+    problem = request.form.get("problem", "").strip()
 
-    file_exists = os.path.isfile("requests.csv")
-    with open("requests.csv", "a", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        if not file_exists:
-            writer.writerow(["name", "phone", "device", "problem"])
-        writer.writerow([name, phone, device, problem])
+    if not name or not phone or not device or not problem:
+        flash("Заполни все поля")
+        return redirect("/")
 
-    flash("Заявка отправлена!")
+    with open("requests.csv", "a", encoding="utf-8") as f:
+        f.write(f'"{name}","{phone}","{device}","{problem}"\n')
+
+    flash("Заявка отправлена")
     return redirect("/")
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
