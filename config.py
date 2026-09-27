@@ -52,8 +52,15 @@ def _int_env(name, default=0):
         return default
 
 
-# id чата, куда бот отправляет отчёты. Узнать свой: написать @userinfobot.
+# id чата, куда бот отправляет отчёты о посещениях. Узнать свой: @userinfobot.
 VISITS_ADMIN_CHAT_ID = _int_env("VISITS_ADMIN_CHAT_ID")
+
+# id чата, куда уходят заявки с сайта. Обычно то же, что и у отчётов.
+# Часто это id группового чата: заявки могут приходить из разных аккаунтов.
+ORDERS_ADMIN_CHAT_ID = _int_env("ORDERS_ADMIN_CHAT_ID", VISITS_ADMIN_CHAT_ID)
+
+# Адрес сайта. Бот подставляет его в ответ, когда ему пишут пользователи.
+SITE_URL = os.environ.get("SITE_URL", "").strip() or "https://example.com"
 
 # Ключ подписи cookie-сессий. Через него работают сообщения об отправке формы.
 # На сервере обязательно задай свой, иначе после перезапуска сообщения "слетают".
@@ -87,8 +94,14 @@ def check_visits_config():
 
 def check_requests_config():
     """Проверяет настройки бота заявок (папка orders/)."""
-    problems = list(CONFIG_PROBLEMS) if PLACEHOLDER in REQUESTS_BOT_TOKEN else []
+    problems = list(CONFIG_PROBLEMS)
     if PLACEHOLDER in REQUESTS_BOT_TOKEN:
         problems.append(_missing_token_message(REQUESTS_BOT_TOKEN))
+    if ORDERS_ADMIN_CHAT_ID == 0:
+        problems.append(
+            "ORDERS_ADMIN_CHAT_ID не задан: боту некуда слать заявки. "
+            "Узнать chat_id можно у @userinfobot (для группы — добавь бота в неё "
+            "и напиши что-нибудь, id будет в group)."
+        )
     if problems:
         sys.exit("Ошибка конфигурации бота заявок:\n- " + "\n- ".join(problems))

@@ -5,6 +5,11 @@
   2. записать каждый заход на сайт в data/visits.db, откуда их забирает
      visits/bot.py для отчётов.
 
+Заявка попадает сразу в два места:
+  * data/orders.db  — очередь: её забирает orders/bot.py и шлёт в Telegram;
+  * data/requests.csv — обычный текстовый файл, чтобы заявки можно было
+    прочитать и без Telegram.
+
 Запуск:
     python app.py            # http://127.0.0.1:5000
     PORT=8080 python app.py  # другой порт
@@ -15,6 +20,7 @@ import os
 from flask import Flask, flash, redirect, render_template, request
 
 from config import SECRET_KEY
+from orders.store import add_order, init_db as init_orders_db
 from paths import data_file
 from visits.store import init_db, log_visit
 
@@ -40,6 +46,7 @@ if SECRET_KEY == "change-me":
     )
 
 init_db()
+init_orders_db()
 
 
 def client_ip():
@@ -95,14 +102,30 @@ def make_request():
         return redirect("/")
 
     try:
-        with open(data_file("requests.csv"), "a", encoding="utf-8") as f:
-            f.write(",".join(csv_field(values[field]) for field in FORM_FIELDS) + "\n")
-    except OSError as error:
-        app.logger.exception("Не удалось записать заявку")
+        # Сначала очередь: из неё бот забирает заявку и отправляет в Telegram.
+        # В CSV кладём вторым шагом — это запасной вариант, чтобы заявки
+        # можно было прочитать, даже если бот не запущен.
+        order_id = add_order(
+            name=values["name"],
+            phone=values["phone"],
+            device=values["device"],
+            address=values["address"],
+            problem=values["problem"],
+            source="site",
+        )
+    except Exception:
+        app.logger.exception("Не удалось положить заявку в очередь")
         flash("Не удалось сохранить заявку. Позвони нам, пожалуйста.")
         return redirect("/")
 
-    flash("Заявка отправлена")
+    try:
+        with open(data_file("requests.csv"), "a", encoding="utf-8") as f:
+            f.write(",".join(csv_field(values[field]) for field in FORM_FIELDS) + "\n")
+    except OSError:
+        # CSV — копия для удобства, очередь уже создана, поэтому заявка не теряется.
+        app.logger.exception("Заявка #%s не попала в requests.csv", order_id)
+
+    flash(f"Заявка отправлена, номер {order_id}")
     return redirect("/")
 
 
