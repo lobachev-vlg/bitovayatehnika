@@ -486,10 +486,36 @@ button, input, textarea { font: inherit; color: inherit; }
     border-radius: var(--radius); overflow: hidden;
     transition: border-color var(--t), box-shadow var(--t);
 }
+<<<<<<< HEAD
 .faq-item[open] { border-color: #c3d8f2; box-shadow: var(--shadow-sm); }
 .faq-item summary {
     list-style: none; cursor: pointer; padding: 20px 56px 20px 24px;
     font-weight: 700; font-size: 17px; color: var(--ink-900); position: relative;
+=======
+
+/* Поле = лейбл сверху и input под ним. Лейблы нужны, чтобы подпись
+   не исчезала, как placeholder, после ввода текста. */
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-field label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #4b5563;
+}
+
+.request-form input,
+.request-form textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    font-size: 16px;
+    outline: none;
+>>>>>>> fcce293e949d98c1b19978ef2a8b91763b01582d
 }
 .faq-item summary::-webkit-details-marker { display: none; }
 .faq-item summary::after {
