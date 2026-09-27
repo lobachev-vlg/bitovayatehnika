@@ -1,3 +1,9 @@
-Flask==3.0.3
-gunicorn==22.0.0
-pyTelegramBotAPI==4.20.0
+# Версии зафиксированы на тех, на которых код реально проверялся.
+Flask==3.1.3
+pyTelegramBotAPI==4.37.0
+
+# Продакшен-сервер на Linux: pip install gunicorn
+# На Windows gunicorn не работает, там запускают через waitress:
+#   pip install waitress
+#   waitress-serve --port=5000 app:app
+gunicorn==23.0.0

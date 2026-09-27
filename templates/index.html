@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ремонт бытовой техники на дому: стиральные машины, холодильники, плиты, посудомойки, микроволновки. Выезд в день обращения, гарантия на работу.">
     <title>Ремонт бытовой техники</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% set css_url = url_for('static', filename='style.css') if request else '../static/style.css' %}
+    <link rel="stylesheet" href="{{ css_url }}">
 </head>
 <body>
     <header class="hero">
@@ -66,23 +68,46 @@
             </div>
         </section>
 
-        <section class="section container form-section" id="form">
+        <section class="section container" id="form">
             <h2>Оставить заявку</h2>
 
+            {# Показываем все сообщения, а не только первое: если в сессии
+               скопились старые (например, страницу обновили до редиректа),
+               одно сообщение затеняло бы другое. #}
             {% with messages = get_flashed_messages() %}
               {% if messages %}
-                <p class="success">{{ messages[0] }}</p>
+                {% for message in messages %}
+                  <p class="success">{{ message }}</p>
+                {% endfor %}
               {% endif %}
             {% endwith %}
 
-            <form action="/submit" method="POST" class="request-form">
+            <!-- url_for вместо жёсткого /request: переименуешь маршрут —
+                 форма продолжит работать. Без request (открытие файла
+                 напрямую) подставляется "#" — отправлять всё равно некуда. -->
+            <form action="{{ url_for('make_request') if request else '#' }}" method="POST" class="request-form">
                 <div class="form-grid">
-                    <input type="text" name="name" placeholder="Ваше имя" required>
-                    <input type="text" name="phone" placeholder="Телефон" required>
-                    <input type="text" name="device" placeholder="Какой прибор сломался?" required>
-                    <input type="text" name="address" placeholder="Адрес" required>
+                    <div class="form-field">
+                        <label for="name">Ваше имя</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="phone">Телефон</label>
+                        <input type="tel" id="phone" name="phone" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="device">Какой прибор сломался</label>
+                        <input type="text" id="device" name="device" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="address">Адрес</label>
+                        <input type="text" id="address" name="address" required>
+                    </div>
                 </div>
-                <textarea name="problem" placeholder="Опишите проблему" required></textarea>
+                <div class="form-field">
+                    <label for="problem">Опишите проблему</label>
+                    <textarea id="problem" name="problem" required></textarea>
+                </div>
                 <button type="submit" class="btn btn-primary">Отправить заявку</button>
             </form>
         </section>
