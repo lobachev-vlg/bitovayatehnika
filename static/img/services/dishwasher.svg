@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" width="400" height="260" role="img" aria-label="Посудомоечная машина">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e6fbf3"/>
+      <stop offset="1" stop-color="#c2ecdc"/>
+    </linearGradient>
+    <linearGradient id="body" x1="0" y1="0" x2=".7" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#dcedea"/>
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7fd8ff" stop-opacity=".7"/>
+      <stop offset="1" stop-color="#2b8ecb" stop-opacity=".25"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="260" fill="url(#bg)"/>
+  <circle cx="66" cy="60" r="74" fill="#ffffff" opacity=".3"/>
+  <circle cx="342" cy="206" r="62" fill="#ffffff" opacity=".26"/>
+  <g>
+    <rect x="120" y="20" width="160" height="220" rx="16" fill="url(#body)" stroke="#9dcbbd" stroke-width="3"/>
+    <rect x="136" y="36" width="128" height="32" rx="8" fill="#eef8f5" stroke="#bfded3" stroke-width="2"/>
+    <circle cx="150" cy="52" r="6" fill="#2f9e7a"/>
+    <rect x="164" y="45" width="40" height="7" rx="3.5" fill="#9dcbbd"/>
+    <circle cx="250" cy="52" r="9" fill="none" stroke="#2f9e7a" stroke-width="3"/>
+    <rect x="132" y="82" width="136" height="12" rx="6" fill="#2b8ecb"/>
+    <rect x="136" y="102" width="128" height="120" rx="10" fill="#e9f6f2" stroke="#cfe6de" stroke-width="2"/>
+    <path d="M136 170h128v42a10 10 0 0 1-10 10H146a10 10 0 0 1-10-10z" fill="url(#water)"/>
+    <g stroke="#9dcbbd" stroke-width="3" stroke-linecap="round" opacity=".85">
+      <path d="M156 120v34M200 120v34M244 120v34M156 200v22M200 200v22M244 200v22"/>
+    </g>
+    <circle cx="200" cy="186" r="12" fill="#ffffff" opacity=".8"/>
+  </g>
+</svg>

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360" width="480" height="360" role="img" aria-label="Заправка холодильника фреоном">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e9fbf3"/>
+      <stop offset="1" stop-color="#c4ead9"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#cbe3da"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="360" fill="url(#bg)"/>
+  <circle cx="80" cy="64" r="82" fill="#ffffff" opacity=".3"/>
+  <circle cx="416" cy="300" r="76" fill="#ffffff" opacity=".2"/>
+  <rect x="150" y="52" width="130" height="248" rx="16" fill="url(#metal)" stroke="#9cc9ba" stroke-width="3"/>
+  <path d="M150 150h130" stroke="#9cc9ba" stroke-width="3"/>
+  <rect x="162" y="74" width="8" height="48" rx="4" fill="#2f9e7a"/>
+  <rect x="162" y="172" width="8" height="72" rx="4" fill="#2f9e7a"/>
+  <g transform="translate(312 190)">
+    <rect x="0" y="34" width="76" height="70" rx="14" fill="#2f9e7a" opacity=".9"/>
+    <rect x="22" y="0" width="32" height="40" rx="8" fill="#7fd8ff" opacity=".8"/>
+    <path d="M38 -12v14" stroke="#7fd8ff" stroke-width="6" stroke-linecap="round"/>
+    <rect x="26" y="60" width="24" height="10" rx="5" fill="#eafff6"/>
+  </g>
+  <g stroke="#2f9e7a" stroke-width="5" stroke-linecap="round" opacity=".6" fill="none">
+    <path d="M290 236h-24"/>
+    <path d="M312 250c-24 20-48 26-72 18"/>
+  </g>
+  <g fill="#ffffff" opacity=".9">
+    <path d="M402 96l5 13 13 5-13 5-5 13-5-13-13-5 13-5z"/>
+  </g>
+</svg>

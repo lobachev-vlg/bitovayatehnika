@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" width="400" height="260" role="img" aria-label="Стиральная машина">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e9f1ff"/>
+      <stop offset="1" stop-color="#c9dcfa"/>
+    </linearGradient>
+    <linearGradient id="body" x1="0" y1="0" x2=".7" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#dae6f7"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3b82c4"/>
+      <stop offset="1" stop-color="#16324f"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="260" fill="url(#bg)"/>
+  <circle cx="52" cy="40" r="86" fill="#ffffff" opacity=".32"/>
+  <circle cx="358" cy="228" r="64" fill="#ffffff" opacity=".24"/>
+  <g>
+    <rect x="122" y="24" width="156" height="212" rx="18" fill="url(#body)" stroke="#9fbae0" stroke-width="3"/>
+    <rect x="138" y="40" width="124" height="32" rx="8" fill="#eff5fd" stroke="#c3d7f2" stroke-width="2"/>
+    <circle cx="152" cy="56" r="6" fill="#2b6cb0"/>
+    <rect x="166" y="49" width="42" height="7" rx="3.5" fill="#9fbde4"/>
+    <circle cx="246" cy="56" r="10" fill="none" stroke="#2b6cb0" stroke-width="3"/>
+    <path d="M246 46v-4" stroke="#2b6cb0" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="200" cy="152" r="56" fill="#c7d8ef" opacity=".75"/>
+    <circle cx="200" cy="152" r="46" fill="url(#glass)"/>
+    <path d="M178 134c14-11 38-7 46 8" fill="none" stroke="#a6d8ff" stroke-width="7" stroke-linecap="round" opacity=".85"/>
+    <circle cx="200" cy="176" r="19" fill="#ffffff" opacity=".18"/>
+    <path d="M182 200c10 8 26 8 36 0" fill="none" stroke="#9fd3ff" stroke-width="4" stroke-linecap="round" opacity=".5"/>
+    <rect x="138" y="214" width="50" height="10" rx="5" fill="#c3d7f2"/>
+  </g>
+</svg>

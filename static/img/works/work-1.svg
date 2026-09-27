@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360" width="480" height="360" role="img" aria-label="Замена подшипника на стиральной машине">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eaf2ff"/>
+      <stop offset="1" stop-color="#cddffb"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#c9d7e8"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="360" fill="url(#bg)"/>
+  <circle cx="400" cy="70" r="90" fill="#ffffff" opacity=".28"/>
+  <circle cx="60" cy="320" r="70" fill="#ffffff" opacity=".22"/>
+  <rect x="90" y="90" width="190" height="230" rx="16" fill="url(#metal)" stroke="#9fb6d4" stroke-width="3"/>
+  <rect x="106" y="106" width="158" height="34" rx="8" fill="#eef4fd" stroke="#c6d7ee" stroke-width="2"/>
+  <circle cx="185" cy="232" r="62" fill="#b7c8de" opacity=".7"/>
+  <circle cx="185" cy="232" r="50" fill="#2a4767"/>
+  <circle cx="185" cy="232" r="26" fill="#8fa9c6"/>
+  <circle cx="185" cy="232" r="10" fill="#5c7a9c"/>
+  <g transform="translate(310 150) rotate(32)">
+    <rect x="0" y="0" width="26" height="120" rx="13" fill="#8fa9c6"/>
+    <path d="M4 0h18a10 10 0 0 0-18 0z" fill="#c9d7e8"/>
+  </g>
+  <g fill="#ffffff" opacity=".9">
+    <path d="M392 210l5 13 13 5-13 5-5 13-5-13-13-5 13-5z"/>
+    <path d="M298 74l4 10 10 4-10 4-4 10-4-10-10-4 10-4z"/>
+  </g>
+  <g stroke="#4f7cc0" stroke-width="5" stroke-linecap="round" opacity=".55" fill="none">
+    <path d="M262 296l34-22 30 16"/>
+  </g>
+</svg>

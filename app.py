@@ -13,6 +13,7 @@ def make_request():
     name = request.form.get("name", "").strip()
     phone = request.form.get("phone", "").strip()
     device = request.form.get("device", "").strip()
+    address = request.form.get("address", "").strip()
     problem = request.form.get("problem", "").strip()
 
     if not name or not phone or not device or not problem:
@@ -20,7 +21,7 @@ def make_request():
         return redirect("/")
 
     with open("requests.csv", "a", encoding="utf-8") as f:
-        f.write(f'"{name}","{phone}","{device}","{problem}"\n')
+        f.write(f'"{name}","{phone}","{device}","{address}","{problem}"\n')
 
     flash("Заявка отправлена")
     return redirect("/")
