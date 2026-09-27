@@ -1,23 +1,44 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-device="{{ device }}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<<<<<<< HEAD
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Ремонт бытовой техники — сервисный центр с выездом на дом</title>
     <meta name="description" content="Ремонт стиральных машин, холодильников, плит, микроволновок и посудомоечных машин. Выезд в день обращения, честные цены, аккуратная работа.">
-    <meta name="theme-color" content="#0f2f56">
+    <meta name="theme-color" content="#0f2f56" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0a111c" media="(prefers-color-scheme: dark)">
     <link rel="preload" href="{{ url_for('static', filename='fonts/manrope-cyrillic.woff2') }}" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="{{ url_for('static', filename='fonts/manrope-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
+
+    {# Тему ставим до первой отрисовки, иначе при тёмной теме страница на
+       мгновение мелькнёт светлой. Скрипт инлайновый намеренно: внешний файл
+       успеет загрузиться позже, чем браузер начнёт рисовать.
+       Если выбор не сделан, атрибута нет — и тема следует за системной. #}
+    <script>
+        (function () {
+            try {
+                var saved = localStorage.getItem('theme');
+                if (saved === 'light' || saved === 'dark') {
+                    document.documentElement.setAttribute('data-theme', saved);
+                }
+            } catch (error) {
+                /* Приватный режим или запрет хранилища — просто следуем системе. */
+            }
+        })();
+    </script>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='fonts.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="icon" href="{{ url_for('static', filename='img/services/washing.svg') }}">
-=======
-    <meta name="description" content="Ремонт бытовой техники на дому: стиральные машины, холодильники, плиты, посудомойки, микроволновки. Выезд в день обращения, гарантия на работу.">
-    <title>Ремонт бытовой техники</title>
-    {% set css_url = url_for('static', filename='style.css') if request else '../static/style.css' %}
-    <link rel="stylesheet" href="{{ css_url }}">
->>>>>>> fcce293e949d98c1b19978ef2a8b91763b01582d
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
+
+    {# Канонический адрес: страница одна, но без него поисковик может
+       считать основной любую ссылку с параметрами. #}
+    <link rel="canonical" href="{{ canonical_url }}">
+
+    {# Микроразметка для Яндекса и Google. Фильтр tojson сам экранирует
+       кавычки и угловые скобки, поэтому данные сюда попасть не могут. #}
+    <script type="application/ld+json">{{ structured_data|tojson }}</script>
 </head>
 <body>
 <a class="skip-link" href="#form">К форме заявки</a>
@@ -47,10 +68,24 @@
         </nav>
 
         <div class="header-side">
-            <a class="header-phone" href="tel:+79001234567">
-                <strong>+7 900 123-45-67</strong>
+            <a class="header-phone" href="tel:{{ phone_tel }}">
+                <strong>{{ phone_display }}</strong>
             </a>
             <a href="#form" class="btn btn-primary btn-sm">Вызвать мастера</a>
+
+            {# Показываем иконку той темы, в которую переключаем: в светлой —
+               луна, в тёмной — солнце. Подпись для скринридеров проставляет
+               app.js: она знает текущую тему, а статический текст устарел бы. #}
+            <button class="theme-toggle" type="button" data-theme-toggle aria-label="Переключить тему">
+                <svg class="theme-toggle__moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
+                </svg>
+                <svg class="theme-toggle__sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="4.2"/>
+                    <path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4 17 7M7 17l-1.6 1.6"/>
+                </svg>
+            </button>
+
             <button class="burger" type="button" aria-label="Открыть меню" aria-expanded="false" data-burger>
                 <span></span><span></span><span></span>
             </button>
@@ -88,7 +123,7 @@
 
                 <div class="hero-actions">
                     <a href="#form" class="btn btn-primary btn-lg">Оставить заявку</a>
-                    <a href="tel:+79001234567" class="btn btn-ghost btn-lg">
+                    <a href="tel:{{ phone_tel }}" class="btn btn-ghost btn-lg">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/>
                         </svg>
@@ -418,7 +453,7 @@
                         <span class="fc-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
                         </span>
-                        <div><small>Телефон</small><a href="tel:+79001234567">+7 900 123-45-67</a></div>
+                        <div><small>Телефон</small><a href="tel:{{ phone_tel }}">{{ phone_display }}</a></div>
                     </li>
                     <li>
                         <span class="fc-icon" aria-hidden="true">
@@ -440,7 +475,6 @@
                 </p>
             </div>
 
-<<<<<<< HEAD
             <div class="form-card reveal" data-delay="150">
                 {% with messages = get_flashed_messages() %}
                   {% if messages %}
@@ -504,7 +538,7 @@
 
         <div class="footer-col">
             <h4>Контакты</h4>
-            <a href="tel:+79001234567">+7 900 123-45-67</a>
+            <a href="tel:{{ phone_tel }}">{{ phone_display }}</a>
             <a href="mailto:service@example.com">service@example.com</a>
             <span>Пн–Вс, 08:00 – 22:00</span>
             <span>Только по городу</span>
@@ -528,52 +562,18 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
 </a>
 
+{# Панель видна только на телефоне (data-device) и только на узком экране:
+   в шапке на таком экране кнопок уже нет, а позвонить мастеру нужно отовсюду. #}
+<div class="mobile-bar" data-mobile-bar>
+    <a class="mobile-bar__btn" href="tel:{{ phone_tel }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/>
+        </svg>
+        Позвонить
+    </a>
+    <a class="mobile-bar__btn mobile-bar__btn--primary" href="#form">Оставить заявку</a>
+</div>
+
 <script src="{{ url_for('static', filename='app.js') }}"></script>
-=======
-        <section class="section container" id="form">
-            <h2>Оставить заявку</h2>
-
-            {# Показываем все сообщения, а не только первое: если в сессии
-               скопились старые (например, страницу обновили до редиректа),
-               одно сообщение затеняло бы другое. #}
-            {% with messages = get_flashed_messages() %}
-              {% if messages %}
-                {% for message in messages %}
-                  <p class="success">{{ message }}</p>
-                {% endfor %}
-              {% endif %}
-            {% endwith %}
-
-            <!-- url_for вместо жёсткого /request: переименуешь маршрут —
-                 форма продолжит работать. Без request (открытие файла
-                 напрямую) подставляется "#" — отправлять всё равно некуда. -->
-            <form action="{{ url_for('make_request') if request else '#' }}" method="POST" class="request-form">
-                <div class="form-grid">
-                    <div class="form-field">
-                        <label for="name">Ваше имя</label>
-                        <input type="text" id="name" name="name" required>
-                    </div>
-                    <div class="form-field">
-                        <label for="phone">Телефон</label>
-                        <input type="tel" id="phone" name="phone" required>
-                    </div>
-                    <div class="form-field">
-                        <label for="device">Какой прибор сломался</label>
-                        <input type="text" id="device" name="device" required>
-                    </div>
-                    <div class="form-field">
-                        <label for="address">Адрес</label>
-                        <input type="text" id="address" name="address" required>
-                    </div>
-                </div>
-                <div class="form-field">
-                    <label for="problem">Опишите проблему</label>
-                    <textarea id="problem" name="problem" required></textarea>
-                </div>
-                <button type="submit" class="btn btn-primary">Отправить заявку</button>
-            </form>
-        </section>
-    </main>
->>>>>>> fcce293e949d98c1b19978ef2a8b91763b01582d
 </body>
 </html>

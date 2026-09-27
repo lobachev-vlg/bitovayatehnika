@@ -27,6 +27,7 @@ if __package__ in (None, ""):
 import telebot  # noqa: E402  — импорт после правки sys.path, так и задумано
 
 from config import VISITS_ADMIN_CHAT_ID, VISITS_BOT_TOKEN, check_visits_config  # noqa: E402
+from device import device_label  # noqa: E402
 from visits.store import (  # noqa: E402
     LIST_LIMIT,
     LIST_PERIODS,
@@ -66,6 +67,20 @@ def period_label(kind, start, end):
     return f"Неделя {start:%d.%m}–{(end - timedelta(days=1)):%d.%m.%Y}"
 
 
+def devices_line(stats):
+    """Строка вида «Телефон 12, Компьютер 3» по просмотрам за период.
+
+    Устройства без просмотров пропускаем, иначе строка была бы всегда
+    одинаковой и только занимала место в сообщении.
+    """
+    parts = [
+        f"{device_label(name).capitalize()} {count}"
+        for name, count in stats["devices"].items()
+        if count
+    ]
+    return "Устройства: " + ", ".join(parts) if parts else ""
+
+
 def build_report(stats):
     """Собирает текст отчёта по данным period_stats.
 
@@ -80,12 +95,18 @@ def build_report(stats):
         return head
 
     lines = [head, f"Просмотров: {stats['views']}"]
+
+    breakdown = devices_line(stats)
+    if breakdown:
+        lines.append(breakdown)
+
     if stats["visitors"]:
         lines.append("")
         for visitor in stats["visitors"]:
+            device = device_label(visitor["device"])
             lines.append(
                 f"  {datetime.fromtimestamp(visitor['first_ts']):%H:%M}  "
-                f"{visitor['ip']}  x{visitor['hits']}  "
+                f"{visitor['ip']}  x{visitor['hits']}  {device}  "
                 f"{short_user_agent(visitor['user_agent'])}"
             )
     return "\n".join(lines)

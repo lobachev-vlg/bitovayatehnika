@@ -4,11 +4,21 @@
    2. Base / layout   7. Sections & cards
    3. Header          8. Forms
    4. Buttons         9. Footer & utilities
-   5. Animations     10. Responsive & dark mode
+   5. Animations     10. Theme toggle
+   6. Hero           11. Responsive & touch
+   7. Sections      12. Mobile bar
+                    13. Error pages
+                    14. Device
    ============================================================ */
 
 /* ---------- 1. TOKENS ---------- */
+/* light-dark() выбирает цвет по color-scheme. Пока у :root стоит
+   "light dark", тема следует за системной, а переключатель в шапке
+   переопределяет её через data-theme. Благодаря этому палитра тёмной
+   темы описана один раз, а не продублирована в отдельном блоке. */
 :root {
+    color-scheme: light dark;
+
     --brand-900: #0b2545;
     --brand-800: #0f2f56;
     --brand-700: #164272;
@@ -26,20 +36,42 @@
     --ok-500:  #16a34a;
     --ok-100:  #dcfce7;
 
-    --ink-900: #0d1520;
-    --ink-800: #16212f;
-    --ink-600: #3d4a5c;
-    --ink-500: #5a6a7f;
-    --ink-400: #8695a8;
-    --ink-300: #b9c4d2;
-    --line:    #e3e9f2;
-    --bg:      #f5f8fd;
-    --surface: #ffffff;
-    --surface-2: #f0f5fc;
+    --ink-900: light-dark(#0d1520, #eef4fb);
+    --ink-800: light-dark(#16212f, #dde7f3);
+    --ink-600: light-dark(#3d4a5c, #b3c2d4);
+    --ink-500: light-dark(#5a6a7f, #9aabc0);
+    --ink-400: light-dark(#8695a8, #8598ae);
+    --ink-300: light-dark(#b9c4d2, #6d8098);
+    --line:    light-dark(#e3e9f2, #24344b);
+    --bg:      light-dark(#f5f8fd, #0a111c);
+    --surface: light-dark(#ffffff, #121c2b);
+    --surface-2: light-dark(#f0f5fc, #172234);
 
     --grad-hero: linear-gradient(135deg, var(--brand-900) 0%, var(--brand-700) 45%, var(--brand-500) 100%);
     --grad-accent: linear-gradient(120deg, var(--accent-400), var(--accent-500));
     --grad-text: linear-gradient(100deg, #38bdf8 0%, #8ae0ff 50%, #22d3ee 100%);
+
+    /* Заливка отдельных элементов, которой раньше хватало только тёмной теме.
+       На тёмном фоне тёмно-синий почти не виден, поэтому градиент и заливки
+       там светлее. */
+    --grad-solid: linear-gradient(135deg, light-dark(#0b2545, #164272), light-dark(#1d5490, #2b6cb0));
+    --band-bg: light-dark(#0b2545, #08101b);
+    --step-bg: light-dark(rgba(255, 255, 255, .05), rgba(255, 255, 255, .04));
+    --header-bg: light-dark(rgba(255, 255, 255, .72), rgba(10, 17, 28, .72));
+    --header-bg-stuck: light-dark(rgba(255, 255, 255, .92), rgba(10, 17, 28, .94));
+    --nav-panel-bg: light-dark(#ffffff, #0e1725);
+    --input-bg: light-dark(#f0f5fc, #0e1826);
+    --input-bg-focus: light-dark(#ffffff, #101c2c);
+    --hover-border: light-dark(#cddcee, #33506f);
+    --faq-open-border: light-dark(#c3d8f2, #33506f);
+    --price-accent-bg: light-dark(var(--grad-hero), linear-gradient(135deg, #14345c, #1d5490));
+    --mobile-bar-bg: light-dark(rgba(255, 255, 255, .92), rgba(10, 17, 28, .92));
+
+    /* Акцентный текст: ссылки, суммы цен, надзаголовки.
+       Фирменные --brand-500 и --brand-600 рассчитаны на белый фон; на
+       тёмном они дают контраст около 2:1 и читаются плохо, поэтому в
+       тёмной теме берём светлый оттенок той же гаммы (контраст 6-7:1). */
+    --brand-text: light-dark(var(--brand-600), var(--brand-300));
 
     --radius-sm: 10px;
     --radius:    16px;
@@ -58,6 +90,10 @@
     --ease: cubic-bezier(.22, .68, .36, 1);
     --t: .28s var(--ease);
 }
+
+/* Выбор темы переключателем перекрывает системную. */
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"]  { color-scheme: dark; }
 
 /* ---------- 2. BASE ---------- */
 *, *::before, *::after { box-sizing: border-box; }
@@ -111,14 +147,14 @@ button, input, textarea { font: inherit; color: inherit; }
 /* ---------- 3. HEADER ---------- */
 .site-header {
     position: sticky; top: 0; z-index: 100;
-    background: rgba(255, 255, 255, .72);
+    background: var(--header-bg);
     backdrop-filter: blur(18px) saturate(180%);
     -webkit-backdrop-filter: blur(18px) saturate(180%);
     border-bottom: 1px solid transparent;
     transition: background var(--t), box-shadow var(--t), border-color var(--t);
 }
 .site-header.is-stuck {
-    background: rgba(255, 255, 255, .92);
+    background: var(--header-bg-stuck);
     border-bottom-color: var(--line);
     box-shadow: var(--shadow-sm);
 }
@@ -132,13 +168,13 @@ button, input, textarea { font: inherit; color: inherit; }
 .logo-mark {
     width: 42px; height: 42px; display: grid; place-items: center;
     border-radius: 13px; color: #fff;
-    background: var(--grad-hero);
+    background: var(--grad-solid);
     box-shadow: var(--shadow-brand);
 }
 .logo-mark svg { width: 22px; height: 22px; }
 .logo-text { display: flex; flex-direction: column; line-height: 1.1; }
 .logo-text strong { font-size: 19px; font-weight: 800; color: var(--ink-900); letter-spacing: -.03em; }
-.logo-text small { font-size: 11.5px; color: var(--ink-400); letter-spacing: .06em; text-transform: uppercase; }
+.logo-text small { font-size: 11.5px; color: var(--ink-500); letter-spacing: .06em; text-transform: uppercase; }
 
 .nav { display: flex; gap: 4px; margin-left: auto; }
 .nav a {
@@ -152,9 +188,9 @@ button, input, textarea { font: inherit; color: inherit; }
 .nav + .header-side { margin-left: 0; }
 
 .header-phone { text-decoration: none; text-align: right; line-height: 1.2; }
-.header-phone__label { display: block; font-size: 11.5px; color: var(--ink-400); letter-spacing: .05em; text-transform: uppercase; }
+.header-phone__label { display: block; font-size: 11.5px; color: var(--ink-500); letter-spacing: .05em; text-transform: uppercase; }
 .header-phone strong { font-size: 17px; color: var(--ink-900); font-weight: 800; }
-.header-phone:hover strong { color: var(--brand-600); }
+.header-phone:hover strong { color: var(--brand-text); }
 
 .burger {
     display: none; width: 44px; height: 44px; border: 1px solid var(--line);
@@ -181,7 +217,7 @@ button, input, textarea { font: inherit; color: inherit; }
 .btn:hover { transform: translateY(-2px); }
 .btn:active { transform: translateY(0); }
 
-.btn-primary { background: var(--grad-hero); box-shadow: var(--shadow-brand); color: #fff; }
+.btn-primary { background: var(--grad-solid); box-shadow: var(--shadow-brand); color: #fff; }
 .btn-primary:hover { box-shadow: 0 18px 40px rgba(27, 67, 113, .36); }
 
 .btn-accent { background: var(--grad-accent); color: #3a1d00; box-shadow: 0 12px 30px rgba(255, 143, 31, .3); }
@@ -190,8 +226,8 @@ button, input, textarea { font: inherit; color: inherit; }
 .btn-ghost { background: rgba(255, 255, 255, .1); color: #fff; border: 1px solid rgba(255, 255, 255, .35); }
 .btn-ghost:hover { background: rgba(255, 255, 255, .2); }
 
-.btn-outline { background: transparent; color: var(--brand-600); border: 2px solid var(--brand-100); }
-.btn-outline:hover { background: var(--brand-100); }
+.btn-outline { background: transparent; color: var(--brand-text); border: 2px solid light-dark(var(--brand-100), var(--brand-600)); }
+.btn-outline:hover { background: var(--brand-100); color: var(--brand-600); }
 
 .btn-sm { padding: 10px 18px; font-size: 14.5px; border-radius: 12px; }
 .btn-lg { padding: 16px 30px; font-size: 16.5px; border-radius: 16px; }
@@ -208,7 +244,7 @@ button, input, textarea { font: inherit; color: inherit; }
 .eyebrow {
     display: inline-flex; align-items: center; gap: 8px;
     font-size: 12.5px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
-    color: var(--brand-500); margin: 0 0 14px;
+    color: var(--brand-text); margin: 0 0 14px;
 }
 .eyebrow::before { content: ''; width: 26px; height: 2px; background: var(--grad-accent); border-radius: 2px; }
 .eyebrow--light { color: #8fd0ff; }
@@ -343,9 +379,11 @@ button, input, textarea { font: inherit; color: inherit; }
 .section-head--light .section-lead { color: #b7cde6; }
 
 /* --- services cards --- */
+/* min() в minmax() обязателен: без него колонка не может стать уже экрана,
+   и на узком телефоне (320px) появляется горизонтальная прокрутка. */
 .cards {
     display: grid; gap: 22px;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
 }
 .card {
     display: flex; flex-direction: column;
@@ -354,7 +392,7 @@ button, input, textarea { font: inherit; color: inherit; }
     box-shadow: var(--shadow-sm);
     transition: transform var(--t), box-shadow var(--t), border-color var(--t);
 }
-.card:hover { transform: translateY(-8px); box-shadow: var(--shadow-lg); border-color: #cddcee; }
+.card:hover { transform: translateY(-8px); box-shadow: var(--shadow-lg); border-color: var(--hover-border); }
 
 .card-media { position: relative; overflow: hidden; background: var(--surface-2); }
 .card-media img {
@@ -370,20 +408,20 @@ button, input, textarea { font: inherit; color: inherit; }
 }
 .card-body { padding: 24px; display: flex; flex-direction: column; flex: 1; }
 .card-body h3 { font-size: 21px; margin: 0 0 6px; }
-.card-note { font-size: 14px; color: var(--ink-400); margin: 0 0 16px; }
+.card-note { font-size: 14px; color: var(--ink-500); margin: 0 0 16px; }
 .card-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
 .card-list li { display: flex; align-items: flex-start; gap: 9px; font-size: 14.5px; color: var(--ink-600); }
 .card-list svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 4px; color: var(--ok-500); }
 .card-link {
     margin-top: auto; display: inline-flex; align-items: center; gap: 8px;
-    text-decoration: none; font-weight: 800; color: var(--brand-600); font-size: 15px;
+    text-decoration: none; font-weight: 800; color: var(--brand-text); font-size: 15px;
 }
 .card-link svg { width: 17px; height: 17px; transition: transform var(--t); }
 .card-link:hover svg { transform: translateX(5px); }
 
 /* --- process (dark band) --- */
 .process {
-    background: var(--brand-900); color: #fff; position: relative; overflow: hidden;
+    background: var(--band-bg); color: #fff; position: relative; overflow: hidden;
 }
 .process::before {
     content: ''; position: absolute; inset: 0;
@@ -391,10 +429,10 @@ button, input, textarea { font: inherit; color: inherit; }
                 radial-gradient(ellipse 50% 70% at 90% 100%, rgba(255, 143, 31, .18), transparent 60%);
 }
 .process .container { position: relative; }
-.steps { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); }
+.steps { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(min(215px, 100%), 1fr)); }
 .step {
     position: relative; padding: 30px 24px;
-    background: rgba(255, 255, 255, .05);
+    background: var(--step-bg);
     border: 1px solid rgba(255, 255, 255, .12);
     border-radius: var(--radius-lg);
     backdrop-filter: blur(8px);
@@ -411,7 +449,7 @@ button, input, textarea { font: inherit; color: inherit; }
 .step p { margin: 0; font-size: 14.5px; color: #a9c4de; }
 
 /* --- works --- */
-.works { display: grid; gap: 22px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.works { display: grid; gap: 22px; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); }
 .work {
     position: relative; margin: 0; overflow: hidden;
     border-radius: var(--radius-lg); box-shadow: var(--shadow);
@@ -428,7 +466,7 @@ button, input, textarea { font: inherit; color: inherit; }
 .work figcaption span { font-size: 13.5px; color: #b8cee6; }
 
 /* --- prices --- */
-.prices { display: grid; gap: 22px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); align-items: stretch; }
+.prices { display: grid; gap: 22px; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); align-items: stretch; }
 .price {
     position: relative; padding: 32px 28px; background: var(--surface);
     border: 1px solid var(--line); border-radius: var(--radius-lg);
@@ -437,7 +475,7 @@ button, input, textarea { font: inherit; color: inherit; }
 }
 .price:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
 .price h3 { font-size: 20px; margin: 0 0 8px; }
-.price-amount { font-size: 40px; font-weight: 800; color: var(--brand-600); letter-spacing: -.03em; margin: 0 0 8px; line-height: 1; }
+.price-amount { font-size: 40px; font-weight: 800; color: var(--brand-text); letter-spacing: -.03em; margin: 0 0 8px; line-height: 1; }
 .price-desc { font-size: 14.5px; color: var(--ink-500); margin: 0 0 20px; }
 .price ul { display: flex; flex-direction: column; gap: 10px; margin-top: auto; }
 .price li { display: flex; align-items: center; gap: 10px; font-size: 15px; color: var(--ink-600); }
@@ -446,7 +484,7 @@ button, input, textarea { font: inherit; color: inherit; }
     background: var(--ok-100) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2316a34a' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / 12px no-repeat;
 }
 .price--accent {
-    background: var(--grad-hero); border-color: transparent;
+    background: var(--price-accent-bg); border-color: transparent;
     box-shadow: var(--shadow-brand);
 }
 .price--accent h3, .price--accent .price-desc { color: #fff; }
@@ -458,11 +496,11 @@ button, input, textarea { font: inherit; color: inherit; }
     font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
     padding: 6px 14px; border-radius: 999px;
 }
-.prices-note { text-align: center; color: var(--ink-400); font-size: 14.5px; margin: 26px 0 0; }
+.prices-note { text-align: center; color: var(--ink-500); font-size: 14.5px; margin: 26px 0 0; }
 
 /* --- reviews --- */
 .reviews-section { background: var(--surface-2); }
-.reviews { display: grid; gap: 22px; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); }
+.reviews { display: grid; gap: 22px; grid-template-columns: repeat(auto-fit, minmax(min(290px, 100%), 1fr)); }
 .review {
     background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg);
     padding: 28px; display: flex; flex-direction: column; gap: 14px; box-shadow: var(--shadow-xs);
@@ -472,11 +510,11 @@ button, input, textarea { font: inherit; color: inherit; }
 .review p { margin: 0; font-size: 15.5px; color: var(--ink-600); flex: 1; }
 .review footer { display: flex; align-items: center; gap: 12px; }
 .review footer strong { display: block; font-size: 15px; color: var(--ink-900); }
-.review footer small { font-size: 13px; color: var(--ink-400); }
+.review footer small { font-size: 13px; color: var(--ink-500); }
 .avatar {
     width: 46px; height: 46px; flex-shrink: 0; display: grid; place-items: center;
     border-radius: 50%; font-weight: 800; font-size: 15px; color: #fff;
-    background: var(--grad-hero);
+    background: var(--grad-solid);
 }
 
 /* --- faq --- */
@@ -486,36 +524,10 @@ button, input, textarea { font: inherit; color: inherit; }
     border-radius: var(--radius); overflow: hidden;
     transition: border-color var(--t), box-shadow var(--t);
 }
-<<<<<<< HEAD
-.faq-item[open] { border-color: #c3d8f2; box-shadow: var(--shadow-sm); }
+.faq-item[open] { border-color: var(--faq-open-border); box-shadow: var(--shadow-sm); }
 .faq-item summary {
     list-style: none; cursor: pointer; padding: 20px 56px 20px 24px;
     font-weight: 700; font-size: 17px; color: var(--ink-900); position: relative;
-=======
-
-/* Поле = лейбл сверху и input под ним. Лейблы нужны, чтобы подпись
-   не исчезала, как placeholder, после ввода текста. */
-.form-field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.form-field label {
-    font-size: 14px;
-    font-weight: 600;
-    color: #4b5563;
-}
-
-.request-form input,
-.request-form textarea {
-    width: 100%;
-    padding: 14px 16px;
-    border: 1px solid #d1d5db;
-    border-radius: 10px;
-    font-size: 16px;
-    outline: none;
->>>>>>> fcce293e949d98c1b19978ef2a8b91763b01582d
 }
 .faq-item summary::-webkit-details-marker { display: none; }
 .faq-item summary::after {
@@ -528,7 +540,7 @@ button, input, textarea { font: inherit; color: inherit; }
 .faq-item p { margin: 0; padding: 0 24px 22px; color: var(--ink-500); font-size: 15.5px; }
 
 /* ---------- 8. FORMS ---------- */
-.form-section { position: relative; overflow: hidden; background: var(--brand-900); border-radius: var(--radius-xl) var(--radius-xl) 0 0; }
+.form-section { position: relative; overflow: hidden; background: var(--band-bg); border-radius: var(--radius-xl) var(--radius-xl) 0 0; }
 .form-bg { position: absolute; inset: 0; }
 .form-grid-wrap {
     position: relative; display: grid; gap: 52px;
@@ -555,26 +567,26 @@ button, input, textarea { font: inherit; color: inherit; }
 .field input, .field textarea {
     width: 100%; padding: 19px 16px 9px;
     border: 1.5px solid var(--line); border-radius: 14px;
-    background: var(--surface-2); font-size: 15.5px;
+    background: var(--input-bg); font-size: 15.5px;
     outline: none; transition: border-color var(--t), box-shadow var(--t), background var(--t);
     resize: vertical;
 }
 .field textarea { min-height: 118px; }
 .field label {
     position: absolute; left: 17px; top: 15px;
-    font-size: 15.5px; color: var(--ink-400); pointer-events: none;
+    font-size: 15.5px; color: var(--ink-500); pointer-events: none;
     transition: transform .2s var(--ease), font-size .2s var(--ease), color .2s var(--ease);
     transform-origin: left top;
 }
 .field input:focus, .field textarea:focus {
-    border-color: var(--brand-400); background: #fff;
+    border-color: var(--brand-400); background: var(--input-bg-focus);
     box-shadow: 0 0 0 4px rgba(61, 130, 196, .14);
 }
 .field input:focus + label,
 .field input:not(:placeholder-shown) + label,
 .field textarea:focus + label,
 .field textarea:not(:placeholder-shown) + label {
-    transform: translateY(-9px) scale(.78); color: var(--brand-500);
+    transform: translateY(-9px) scale(.78); color: var(--brand-text);
 }
 .request-form .btn { grid-column: 1 / -1; margin-top: 6px; }
 .request-form .btn.is-loading { pointer-events: none; opacity: .85; }
@@ -594,7 +606,7 @@ button, input, textarea { font: inherit; color: inherit; }
 }
 
 /* ---------- 9. FOOTER ---------- */
-.site-footer { background: var(--brand-900); color: #a9c0da; padding: 66px 0 26px; margin-top: -1px; }
+.site-footer { background: var(--band-bg); color: #a9c0da; padding: 66px 0 26px; margin-top: -1px; }
 .footer-inner { display: grid; gap: 34px; grid-template-columns: 1.6fr 1fr 1fr 1fr; }
 .footer-col { display: flex; flex-direction: column; gap: 11px; }
 .footer-col h4 { color: #fff; font-size: 15px; margin: 0 0 4px; letter-spacing: .02em; }
@@ -613,7 +625,7 @@ button, input, textarea { font: inherit; color: inherit; }
     position: fixed; right: 24px; bottom: 24px; z-index: 120;
     width: 52px; height: 52px; display: grid; place-items: center;
     border-radius: 50%; text-decoration: none; color: #fff;
-    background: var(--grad-hero); box-shadow: var(--shadow-brand);
+    background: var(--grad-solid); box-shadow: var(--shadow-brand);
     opacity: 0; visibility: hidden; transform: translateY(16px) scale(.9);
     transition: opacity var(--t), transform var(--t), visibility var(--t);
     will-change: opacity, transform;
@@ -622,15 +634,53 @@ button, input, textarea { font: inherit; color: inherit; }
 .to-top.is-visible { opacity: 1; visibility: visible; transform: none; }
 .to-top:hover { transform: translateY(-3px); }
 
-/* ---------- 10. RESPONSIVE ---------- */
+/* ---------- 10. ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ ---------- */
+.theme-toggle {
+    width: 44px; height: 44px; flex-shrink: 0;
+    display: grid; place-items: center; padding: 0;
+    border: 1px solid var(--line); border-radius: 12px;
+    background: var(--surface); color: var(--ink-600); cursor: pointer;
+    transition: color var(--t), background var(--t), border-color var(--t), transform var(--t);
+}
+.theme-toggle:hover {
+    color: var(--brand-text); border-color: var(--brand-300); transform: translateY(-2px);
+}
+.theme-toggle svg { width: 20px; height: 20px; }
+
+/* Показываем иконку той темы, в которую переключаем: сейчас светлая — видна
+   луна, сейчас тёмная — солнце. Отдельное правило для случая, когда выбор
+   пользователя ещё не сделан и тема следует за системной. */
+.theme-toggle__sun { display: none; }
+:root[data-theme="dark"] .theme-toggle__moon,
+:root[data-theme="light"] .theme-toggle__sun { display: none; }
+:root[data-theme="dark"] .theme-toggle__sun { display: block; }
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) .theme-toggle__moon { display: none; }
+    :root:not([data-theme]) .theme-toggle__sun { display: block; }
+}
+
+/* Плавная смена цветов. Класс вешает app.js на время переключения: у
+   компонентов свои transition для наведения, а здесь нужен именно переход
+   цвета, поэтому перечисляем свойства явно. */
+.theme-switching body,
+.theme-switching body *,
+.theme-switching body *::before,
+.theme-switching body *::after {
+    transition-property: background-color, border-color, color, fill, box-shadow, outline-color;
+    transition-duration: .3s;
+    transition-timing-function: var(--ease);
+}
+
+/* ---------- 11. RESPONSIVE ---------- */
 @media (max-width: 1080px) {
     .nav { display: none; }
     .header-side { margin-left: auto; }
-    .site-header.nav-open { background: var(--surface); }
+    .site-header.nav-open { background: var(--header-bg-stuck); }
     .site-header.nav-open .nav {
         display: flex; position: absolute; top: var(--header-h); left: 0; right: 0;
         flex-direction: column; gap: 2px; padding: 14px;
-        background: var(--surface); border-bottom: 1px solid var(--line);
+        background: var(--nav-panel-bg); border-bottom: 1px solid var(--line);
         box-shadow: var(--shadow); margin: 0;
     }
     .site-header.nav-open .nav a { padding: 13px 16px; font-size: 16px; }
@@ -653,8 +703,12 @@ button, input, textarea { font: inherit; color: inherit; }
     .header-side .btn { display: none; }
     .container { width: min(var(--container), 94%); }
     .section { padding: 52px 0; }
+    .hero { padding-top: 40px; }
     .hero h1 { font-size: 31px; }
+    .hero-text { font-size: 16px; }
     .hero-actions .btn { flex: 1 1 100%; }
+    .hero-facts { gap: 12px 26px; }
+    .hero-facts b { font-size: 24px; }
     .float-card { display: none; }
     .request-form { grid-template-columns: 1fr; }
     .form-card { padding: 24px; }
@@ -663,33 +717,111 @@ button, input, textarea { font: inherit; color: inherit; }
     .footer-bottom { flex-direction: column; }
     .to-top { right: 16px; bottom: 16px; }
     .section-head { margin-bottom: 32px; }
+
+    /* 16px — иначе iOS при фокусе в поле сам увеличивает страницу, и её
+       приходится возвращать пальцем. */
+    .field input, .field textarea { font-size: 16px; }
+
+    /* Отступ под липкую панель, чтобы она не закрывала футер. */
+    [data-device="phone"] body { padding-bottom: calc(74px + env(safe-area-inset-bottom)); }
+    [data-device="phone"] .to-top { bottom: calc(82px + env(safe-area-inset-bottom)); }
 }
 
-/* ---------- 10b. DARK MODE ---------- */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --bg: #0a111c;
-        --surface: #121c2b;
-        --surface-2: #172234;
-        --ink-900: #eef4fb;
-        --ink-800: #dde7f3;
-        --ink-600: #b3c2d4;
-        --ink-500: #9aabc0;
-        --ink-400: #8598ae;
-        --ink-300: #6d8098;
-        --line: #24344b;
-    }
-    .site-header { background: rgba(10, 17, 28, .72); }
-    .site-header.is-stuck, .site-header.nav-open { background: rgba(10, 17, 28, .94); }
-    .site-header.nav-open .nav { background: #0e1725; }
-    .card, .review, .price, .faq-item, .form-card { border-color: var(--line); }
-    .field input, .field textarea { background: #0e1826; }
-    .field input:focus, .field textarea:focus { background: #101c2c; }
-    .card:hover, .price:hover, .review:hover, .faq-item[open] { border-color: #33506f; }
-    .logo-mark, .btn-primary, .to-top, .avatar { background: linear-gradient(135deg, #164272, #2b6cb0); }
-    .price--accent { background: linear-gradient(135deg, #14345c, #1d5490); }
-    .burger { background: var(--surface); }
-    .burger span { background: var(--ink-100, #dde7f3); }
-    .process, .form-section, .site-footer { background: #08101b; }
-    .step { background: rgba(255, 255, 255, .04); }
+/* Очень узкие экраны (iPhone SE и уже): уменьшаем поля и отступы, чтобы
+   кнопки не распирали экран. */
+@media (max-width: 380px) {
+    .hero h1 { font-size: 27px; }
+    .hero-facts b { font-size: 21px; }
+    .form-card { padding: 18px; }
+    .field input, .field textarea { padding: 18px 14px 9px; }
+    .field label { left: 15px; }
 }
+
+/* ---------- 12. СЕНСОРНЫЕ ЭКРАНЫ ---------- */
+/* На сенсорных экранах наведения нет: после нажатия :hover залипает, и карточка
+   остаётся приподнятой, пока не ткнёшь мимо. Поэтому эффекты, которые держатся
+   на :hover, на них просто отключаем. */
+@media (hover: none) {
+    .card:hover, .work:hover, .price:hover, .review:hover,
+    .step:hover, .btn:hover, .to-top:hover, .theme-toggle:hover { transform: none; }
+    .card:hover .card-media img, .work:hover img { transform: none; }
+    .card-link:hover svg { transform: none; }
+}
+
+/* Палец aimed точнее курсора: увеличиваем площадь нажатия до рекомендованных
+   44px и убираем подсветку тапа, которая иначе остаётся на элементе. */
+@media (pointer: coarse) {
+    .theme-toggle, .burger { width: 48px; height: 48px; }
+    .btn { min-height: 48px; }
+    .nav a, .faq-item summary, .footer-col a, .contact-list a, .card-link {
+        min-height: 48px; display: flex; align-items: center;
+    }
+    .faq-item summary { padding: 16px 56px 16px 20px; }
+
+    /* Подсветка нажатия иначе остаётся на элементе и выглядит как ошибка
+       вёрстки. */
+    * { -webkit-tap-highlight-color: rgba(43, 108, 176, .18); }
+}
+
+/* ---------- 13. ЛИПКАЯ ПАНЕЛЬ (только телефон) ---------- */
+.mobile-bar { display: none; }
+
+@media (max-width: 640px) {
+    [data-device="phone"] .mobile-bar {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 110;
+        display: flex; gap: 10px;
+        padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+        background: var(--mobile-bar-bg);
+        backdrop-filter: blur(18px) saturate(180%);
+        -webkit-backdrop-filter: blur(18px) saturate(180%);
+        border-top: 1px solid var(--line);
+    }
+    .mobile-bar__btn {
+        flex: 1; min-height: 50px;
+        display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+        border: 1.5px solid var(--brand-300); border-radius: 14px;
+        font-weight: 700; font-size: 15.5px; text-decoration: none; color: var(--brand-600);
+    }
+    .mobile-bar__btn svg { width: 18px; height: 18px; }
+    .mobile-bar__btn--primary {
+        background: var(--grad-solid); border-color: transparent; color: #fff;
+        box-shadow: var(--shadow-brand);
+    }
+}
+
+/* ---------- 14. СТРАНИЦЫ ОШИБОК ---------- */
+.error-page {
+    min-height: 100vh; min-height: 100dvh;
+    display: grid; place-items: center; padding: 32px 20px;
+}
+.error-card {
+    width: min(560px, 100%);
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius-xl); box-shadow: var(--shadow);
+    padding: 44px 40px; text-align: center;
+}
+.error-logo {
+    justify-content: center; margin-bottom: 28px; text-decoration: none;
+}
+.error-code {
+    margin: 0 0 8px; font-size: clamp(64px, 14vw, 104px); font-weight: 800;
+    line-height: 1; letter-spacing: -.04em;
+    background: var(--grad-solid);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: var(--brand-text);
+}
+.error-title { font-size: clamp(24px, 4vw, 30px); margin: 0 0 12px; }
+.error-text { color: var(--ink-500); margin: 0 0 30px; }
+.error-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+
+@media (max-width: 480px) {
+    .error-card { padding: 30px 20px; }
+    .error-actions .btn { flex: 1 1 100%; }
+}
+
+/* ---------- 15. УСТРОЙСТВО ---------- */
+/* data-device ставит сервер по User-Agent. Компьютер и планшет различаем
+   только в одном: на телефоне заменяем кнопку в шапке липкой панелью, а сам
+   факт устройства полезен и для мелких правок. */
+[data-device="phone"] .hero-text { max-width: none; }
+[data-device="tablet"] .header-side .btn { display: none; }

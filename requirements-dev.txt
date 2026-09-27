@@ -1,0 +1,11 @@
+# Инструменты разработки. В бою не нужны: на сервере ставится только
+# requirements.txt, чтобы не тащить тестовый раннер в продакшен.
+#
+#     pip install -r requirements-dev.txt
+#
+# Pillow — только для одноразовой генерации static/img/apple-touch-icon.png
+# (iOS не показывает SVG-иконку на домашнем экране). Перегенерировать
+# иконку нужно будет редко, поэтому в основной requirements.txt его нет.
+-r requirements.txt
+pytest==9.1.1
+Pillow==12.3.0

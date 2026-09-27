@@ -6,13 +6,18 @@
 терялись в неизвестном месте.
 """
 
+import os
 from pathlib import Path
 
 # Корень проекта — папка, где лежит этот файл.
 ROOT_DIR = Path(__file__).resolve().parent
 
 # Папка рабочих данных: база посещений, заявки с сайта, заявки из Telegram.
-DATA_DIR = ROOT_DIR / "data"
+# Переопределяется переменной окружения DATA_DIR — этим пользуются тесты,
+# чтобы не писать в настоящую базу. Проверка идёт при импорте, а не в
+# data_file(): пути к базам вычисляются один раз наверху visits/store.py
+# и orders/store.py, и подменить их позже уже не выйдет.
+DATA_DIR = Path(os.environ.get("DATA_DIR", "").strip() or ROOT_DIR / "data")
 
 
 def data_file(name):

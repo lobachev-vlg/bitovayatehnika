@@ -60,7 +60,27 @@ VISITS_ADMIN_CHAT_ID = _int_env("VISITS_ADMIN_CHAT_ID")
 ORDERS_ADMIN_CHAT_ID = _int_env("ORDERS_ADMIN_CHAT_ID", VISITS_ADMIN_CHAT_ID)
 
 # Адрес сайта. Бот подставляет его в ответ, когда ему пишут пользователи.
-SITE_URL = os.environ.get("SITE_URL", "").strip() or "https://example.com"
+SITE_URL_DEFAULT = "https://example.com"
+SITE_URL = os.environ.get("SITE_URL", "").strip() or SITE_URL_DEFAULT
+
+# Телефон сервиса. Держим его здесь, а не в шаблоне: он нужен в трёх видах —
+# для показа («+7 900 123-45-67»), для ссылки tel: («+79001234567») и для
+# микроразметки Schema.org. В шаблоне на одной странице он повторялся пять раз,
+# и при смене номера легко было забыть одно из мест.
+SITE_PHONE_DISPLAY = os.environ.get("SITE_PHONE_DISPLAY", "").strip() or "+7 900 123-45-67"
+SITE_PHONE_TEL = os.environ.get("SITE_PHONE_TEL", "").strip() or "+79001234567"
+
+
+def site_base_url(request_fallback=""):
+    """Адрес сайта для канонической ссылки, sitemap и микроразметки.
+
+    Пока SITE_URL не задан, стоит заглушка example.com — подставлять её в
+    разметку нельзя, поисковики сочтут канонический адрес чужим. Тогда
+    берётся хост текущего запроса.
+    """
+    if SITE_URL and SITE_URL != SITE_URL_DEFAULT:
+        return SITE_URL.rstrip("/")
+    return (request_fallback or "").rstrip("/")
 
 # Ключ подписи cookie-сессий. Через него работают сообщения об отправке формы.
 # На сервере обязательно задай свой, иначе после перезапуска сообщения "слетают".

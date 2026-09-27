@@ -5,7 +5,64 @@
 
     var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    /* ---------- 1. Появление блоков при скролле ---------- */
+    /* ---------- 1. Переключатель темы ---------- */
+    var themeButton = document.querySelector('[data-theme-toggle]');
+    var root = document.documentElement;
+    var systemDark = window.matchMedia('(prefers-color-scheme: dark)');
+
+    /* Какая тема сейчас на экране. Пока пользователь ничего не выбрал, тема
+       следует за системной — этот случай и обрабатывает matchMedia. */
+    function currentTheme() {
+        var chosen = root.getAttribute('data-theme');
+        if (chosen === 'light' || chosen === 'dark') return chosen;
+        return systemDark.matches ? 'dark' : 'light';
+    }
+
+    function describeTheme(theme) {
+        return theme === 'dark' ? 'Включить светлую тему' : 'Включить тёмную тему';
+    }
+
+    function syncThemeButton() {
+        if (!themeButton) return;
+        var label = describeTheme(currentTheme());
+        themeButton.setAttribute('aria-label', label);
+        themeButton.setAttribute('title', label);
+    }
+
+    if (themeButton) {
+        themeButton.addEventListener('click', function () {
+            var next = currentTheme() === 'dark' ? 'light' : 'dark';
+            root.setAttribute('data-theme', next);
+
+            try {
+                localStorage.setItem('theme', next);
+            } catch (error) {
+                /* Хранилище запрещено: тема применится, но не переживёт
+                   перезагрузку. Это лучше, чем не переключать вовсе. */
+            }
+
+            /* Плавный переход цветов живёт 300мс — по столько же держим
+               класс, который им включает. */
+            root.classList.add('theme-switching');
+            window.setTimeout(function () {
+                root.classList.remove('theme-switching');
+            }, 300);
+
+            syncThemeButton();
+        });
+
+        /* Пока тема не выбрана явно, она обязана реагировать на смену
+           системной — например, вечером телефон переключили в тёмный. */
+        if (systemDark.addEventListener) {
+            systemDark.addEventListener('change', syncThemeButton);
+        } else if (systemDark.addListener) {
+            systemDark.addListener(syncThemeButton);
+        }
+
+        syncThemeButton();
+    }
+
+    /* ---------- 2. Появление блоков при скролле ---------- */
     var revealables = Array.prototype.slice.call(document.querySelectorAll('.reveal'));
 
     if (prefersReduced || !('IntersectionObserver' in window)) {
@@ -27,7 +84,7 @@
         }, 2500);
     }
 
-    /* ---------- 2. Липкая шапка + кнопка "наверх" ---------- */
+    /* ---------- 3. Липкая шапка + кнопка "наверх" ---------- */
     var header = document.querySelector('.site-header');
     var toTop = document.querySelector('[data-to-top]');
 
@@ -59,7 +116,7 @@
         });
     }
 
-    /* ---------- 3. Мобильное меню ---------- */
+    /* ---------- 4. Мобильное меню ---------- */
     var burger = document.querySelector('[data-burger]');
 
     if (burger && header) {
@@ -83,7 +140,7 @@
         });
     }
 
-    /* ---------- 4. Маска телефона ---------- */
+    /* ---------- 5. Маска телефона ---------- */
     var phone = document.querySelector('[data-phone]');
 
     if (phone) {
@@ -114,7 +171,7 @@
         });
     }
 
-    /* ---------- 5. Состояние кнопки отправки ---------- */
+    /* ---------- 6. Состояние кнопки отправки ---------- */
     var form = document.querySelector('[data-request-form]');
 
     if (form) {

@@ -16,10 +16,17 @@
 """
 
 import os
+import time
 
-from flask import Flask, flash, redirect, render_template, request
+from flask import Flask, Response, flash, redirect, render_template, request, url_for
 
-from config import SECRET_KEY
+from config import (
+    SECRET_KEY,
+    SITE_PHONE_DISPLAY,
+    SITE_PHONE_TEL,
+    site_base_url,
+)
+from device import detect_device
 from orders.store import add_order, init_db as init_orders_db
 from paths import data_file
 from visits.store import init_db, log_visit
@@ -36,6 +43,19 @@ FIELD_LABELS = {
     "problem": "описание проблемы",
 }
 
+# Тексты страниц ошибок. Ключ — код ответа.
+ERROR_PAGES = {
+    404: {
+        "title": "Страница не найдена",
+        "text": "Такой страницы нет — возможно, в адресе опечатка или ссылка устарела.",
+    },
+    500: {
+        "title": "Сайт не отвечает",
+        "text": "Что-то сломалось на нашей стороне. Попробуйте обновить страницу "
+                "или позвонить — заявку примем и по телефону.",
+    },
+}
+
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
@@ -47,6 +67,56 @@ if SECRET_KEY == "change-me":
 
 init_db()
 init_orders_db()
+
+
+def template_context(**extra):
+    """Общие для всех страниц значения: телефон, устройство, адрес сайта.
+
+    Заведены здесь, чтобы номер не расходился между шапкой, подвалом,
+    мобильной панелью и микроразметкой.
+    """
+    context = {
+        "phone_display": SITE_PHONE_DISPLAY,
+        "phone_tel": SITE_PHONE_TEL,
+        "device": detect_device(request.headers.get("User-Agent", "")),
+        "base_url": site_base_url(request.host_url),
+    }
+    context.update(extra)
+    return context
+
+
+def structured_data(base_url):
+    """Микроразметка Schema.org: чем занимаемся, когда работаем, сколько стоит.
+
+    Яндекс и Google показывают её расширенным сниппетом — телефон, часы
+    работы и диапазон цен прямо в выдаче.
+
+    Адрес и город сюда не вписаны: SITE_URL по умолчанию — заглушка, а
+    названия города в проекте нет. Когда появится, добавь address и
+    areaServed: в разметке они заметно улучшают локальную выдачу.
+    """
+    return {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "name": "МастерДом",
+        "description": (
+            "Ремонт бытовой техники на дому: стиральные машины, холодильники, "
+            "плиты, посудомойки, микроволновки, кондиционеры."
+        ),
+        "url": base_url,
+        "image": f"{base_url}{url_for('static', filename='img/hero-master.svg')}",
+        "telephone": SITE_PHONE_TEL,
+        "priceRange": "700–5000 ₽",
+        "openingHoursSpecification": {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": [
+                "Monday", "Tuesday", "Wednesday", "Thursday",
+                "Friday", "Saturday", "Sunday",
+            ],
+            "opens": "08:00",
+            "closes": "22:00",
+        },
+    }
 
 
 def client_ip():
@@ -78,25 +148,69 @@ def csv_field(value):
 @app.route("/")
 def index():
     """Главная страница. Каждый заход на неё засчитывается как визит."""
+    user_agent = request.headers.get("User-Agent", "")
+
     log_visit(
         client_ip(),
-        request.headers.get("User-Agent", ""),
+        user_agent,
         request.headers.get("Referer", ""),
+        detect_device(user_agent),
     )
-    return render_template("index.html")
+    context = template_context()
+    return render_template(
+        "index.html",
+        # Шаблон по data-device решает, показывать ли панель с быстрым звонком
+        # и крупные кнопки: на телефоне это удобнее, на компьютере лишнее.
+        canonical_url=f"{context['base_url']}{url_for('index')}",
+        structured_data=structured_data(context["base_url"]),
+        **context,
+    )
+
+
+@app.route("/sitemap.xml")
+def sitemap():
+    """Карта сайта для поисковиков.
+
+    Страница одна, но карту всё равно стоит отдавать: Яндекс и Google
+    заходят на /sitemap.xml без всякой догадки о структуре сайта.
+    Дата изменения — не время ответа, а mtime шаблона на диске: так дата
+    меняется, только когда правят вёрстку.
+    """
+    template_mtime = os.path.getmtime(
+        os.path.join(app.root_path, app.template_folder, "index.html")
+    )
+    lastmod = time.strftime("%Y-%m-%d", time.localtime(template_mtime))
+    location = f"{site_base_url(request.host_url)}{url_for('index')}"
+
+    xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        "  <url>\n"
+        f"    <loc>{location}</loc>\n"
+        f"    <lastmod>{lastmod}</lastmod>\n"
+        "    <changefreq>weekly</changefreq>\n"
+        "    <priority>1.0</priority>\n"
+        "  </url>\n"
+        "</urlset>\n"
+    )
+    return Response(xml, mimetype="application/xml")
+
+
+@app.route("/robots.txt")
+def robots():
+    """robots.txt. Всё открыто: закрывать поисковикам нечего."""
+    base = site_base_url(request.host_url)
+    return Response(
+        "User-agent: *\n"
+        "Allow: /\n\n"
+        f"Sitemap: {base}{url_for('sitemap')}\n",
+        mimetype="text/plain",
+    )
 
 
 @app.route("/request", methods=["POST"])
 def make_request():
-<<<<<<< HEAD
-    name = request.form.get("name", "").strip()
-    phone = request.form.get("phone", "").strip()
-    device = request.form.get("device", "").strip()
-    address = request.form.get("address", "").strip()
-    problem = request.form.get("problem", "").strip()
-=======
     """Приём заявки с формы.
->>>>>>> fcce293e949d98c1b19978ef2a8b91763b01582d
 
     После отправки отдаём 302 на главную: страница с формой доступна и по
     прямой ссылке (тогда как её рендер засчитался бы ещё одним визитом),
@@ -109,10 +223,6 @@ def make_request():
         flash(f"Заполни: {', '.join(missing)}")
         return redirect("/")
 
-<<<<<<< HEAD
-    with open("requests.csv", "a", encoding="utf-8") as f:
-        f.write(f'"{name}","{phone}","{device}","{address}","{problem}"\n')
-=======
     try:
         # Сначала очередь: из неё бот забирает заявку и отправляет в Telegram.
         # В CSV кладём вторым шагом — это запасной вариант, чтобы заявки
@@ -129,7 +239,6 @@ def make_request():
         app.logger.exception("Не удалось положить заявку в очередь")
         flash("Не удалось сохранить заявку. Позвони нам, пожалуйста.")
         return redirect("/")
->>>>>>> fcce293e949d98c1b19978ef2a8b91763b01582d
 
     try:
         with open(data_file("requests.csv"), "a", encoding="utf-8") as f:
@@ -140,6 +249,44 @@ def make_request():
 
     flash(f"Заявка отправлена, номер {order_id}")
     return redirect("/")
+
+
+def render_error(code):
+    """Показывает свою страницу вместо служебной Werkzeug.
+
+    Шаблон намеренно ничего не берёт из базы: страница 500 как раз и значит,
+    что с хранилищем что-то не так, и обращение к нему из обработчика
+    утянуло бы за собой вторую ошибку.
+    """
+    page = ERROR_PAGES[code]
+    return (
+        render_template(
+            "error.html",
+            code=code,
+            title=page["title"],
+            text=page["text"],
+            phone_display=SITE_PHONE_DISPLAY,
+            phone_tel=SITE_PHONE_TEL,
+        ),
+        code,
+    )
+
+
+@app.errorhandler(404)
+def not_found(error):
+    """Страница не найдена."""
+    return render_error(404)
+
+
+@app.errorhandler(500)
+def server_error(error):
+    """Внутренняя ошибка сервера.
+
+    Саму ошибку не показываем посетителю, но пишем в лог: без этого
+    поломка видна только по словам пользователя.
+    """
+    app.logger.exception("Ошибка 500 на %s", request.path)
+    return render_error(500)
 
 
 if __name__ == "__main__":
