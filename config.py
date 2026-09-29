@@ -25,13 +25,13 @@ CONFIG_PROBLEMS = []
 # чем сработает check_visits_config() с нормальным сообщением.
 VISITS_BOT_TOKEN = (
     os.environ.get("VISITS_BOT_TOKEN", "").strip()
-    or "0:ВСТАВЬ_СЮДА_ТОКЕН_БОТА_ДЛЯ_ПОСЕЩЕНИЙ"
+    or "8856463579:AAGAzfjoJkI1pjws96St97udT-qMYmOevHc"
 )
 
 # Токен бота, который принимает заявки в Telegram (папка orders/).
 REQUESTS_BOT_TOKEN = (
     os.environ.get("REQUESTS_BOT_TOKEN", "").strip()
-    or "0:ВСТАВЬ_СЮДА_ТОКЕН_БОТА_ДЛЯ_ЗАЯВОК"
+    or "8927607812:AAGmYLzSaxrKeg8B7kt9tr_2Bu1KVug_CmU"
 )
 
 
