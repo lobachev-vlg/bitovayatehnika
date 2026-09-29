@@ -25,7 +25,9 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import telebot  # noqa: E402  — импорт после правки sys.path, так и задумано
+from telebot.apihelper import ApiTelegramException  # noqa: E402
 
+from bot_polling import conflict_message, is_polling_conflict  # noqa: E402
 from config import (  # noqa: E402
     VISITS_ADMIN_CHAT_ID,
     VISITS_BOT_TOKEN,
@@ -246,12 +248,11 @@ if __name__ == "__main__":
     log("Запуск polling")
     try:
         bot.polling(none_stop=True, skip_pending=True)
-    except telebot.apihelper.TelegramConflictError:
-        # Telegram отдаёт Conflict, когда за одним токеном уже работает
-        # другой процесс с polling. Сообщение объясняет это лучше traceback.
-        sys.exit(
-            "Этот бот уже запущен в другом процессе. Telegram не даёт двум "
-            "ботам с одним токеном читать сообщения одновременно."
-        )
+    except ApiTelegramException as error:
+        if is_polling_conflict(error):
+            sys.exit(conflict_message("бот посещений"))
+        # Любая другая ошибка Telegram — уже не повод молча умирать:
+        # показываем текст ошибки целиком.
+        raise
     except KeyboardInterrupt:
         log("Остановлен")
