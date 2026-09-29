@@ -578,7 +578,7 @@ button, input, textarea { font: inherit; color: inherit; }
     transition: transform .2s var(--ease), font-size .2s var(--ease), color .2s var(--ease);
     transform-origin: left top;
 }
-.field input:focus, .field textarea:focus {
+.field input:focus, .field textarea:focus, .field select:focus {
     border-color: var(--brand-400); background: var(--input-bg-focus);
     box-shadow: 0 0 0 4px rgba(61, 130, 196, .14);
 }
@@ -587,6 +587,42 @@ button, input, textarea { font: inherit; color: inherit; }
 .field textarea:focus + label,
 .field textarea:not(:placeholder-shown) + label {
     transform: translateY(-9px) scale(.78); color: var(--brand-text);
+}
+
+/* --- select прибора ---
+   У select нет placeholder, поэтому «плавающая» лейбла на нём не работает:
+   подпись стоит над полем постоянно, а значение видно сразу. */
+.field--select label {
+    position: static; display: block; margin-bottom: 7px;
+    font-size: 14px; color: var(--ink-500); transform: none;
+}
+.field select {
+    width: 100%; padding: 15px 44px 15px 16px;
+    border: 1.5px solid var(--line); border-radius: 14px;
+    background: var(--input-bg); font-size: 15.5px; color: var(--ink-800);
+    outline: none; cursor: pointer;
+    transition: border-color var(--t), box-shadow var(--t), background var(--t);
+    /* Своя стрелка вместо системной: в Windows и в Safari она разная, и
+       от этого форма выглядит по-разному на разных устройствах. */
+    -webkit-appearance: none; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238695a8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 17px;
+}
+.field select:invalid { color: var(--ink-500); }
+.field select option { background: var(--surface); color: var(--ink-800); }
+
+/* Подпись «необязательно» внутри лейблы. Оттенок не задаём: любой светлее
+   основного текста на этом фоне падает ниже 4.5:1, а на 12px этого мало.
+   Вторичность держим размером и насыщенностью, а не прозрачностью. */
+.field__hint {
+    font-size: .8em; font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+.field__note {
+    grid-column: 1 / -1; margin: -2px 0 0;
+    font-size: 13.5px; color: var(--ink-500); line-height: 1.5;
 }
 .request-form .btn { grid-column: 1 / -1; margin-top: 6px; }
 .request-form .btn.is-loading { pointer-events: none; opacity: .85; }
@@ -719,8 +755,9 @@ button, input, textarea { font: inherit; color: inherit; }
     .section-head { margin-bottom: 32px; }
 
     /* 16px — иначе iOS при фокусе в поле сам увеличивает страницу, и её
-       приходится возвращать пальцем. */
-    .field input, .field textarea { font-size: 16px; }
+       приходится возвращать пальцем. Select сюда же: на узком экране
+       размер шрифта в форме должен быть один, иначе строка выбивается. */
+    .field input, .field textarea, .field select { font-size: 16px; }
 
     /* Отступ под липкую панель, чтобы она не закрывала футер. */
     [data-device="phone"] body { padding-bottom: calc(74px + env(safe-area-inset-bottom)); }

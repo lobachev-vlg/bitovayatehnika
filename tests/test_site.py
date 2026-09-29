@@ -13,7 +13,8 @@ import sqlite3
 
 import pytest
 
-from app import FORM_FIELDS
+from app import FORM_FIELDS, OPTIONAL_FIELDS, REQUIRED_FIELDS
+from services import SERVICES
 
 PHONE_UA = (
     "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 "
@@ -27,7 +28,8 @@ DESKTOP_UA = (
 FORM = {
     "name": "Пётр",
     "phone": "+7 900 000-00-00",
-    "device": "Стиральная машина",
+    # Прибор приходит code из services.py, а в очередь попадает его название.
+    "device": "washing",
     "address": "ул. Ленина, 1",
     "problem": "Не сливает воду",
 }
@@ -100,22 +102,108 @@ def test_request_saves_all_fields(client, orders_db_path):
         ).fetchone()
 
     assert row == (
-        FORM["name"], FORM["phone"], FORM["device"],
+        FORM["name"], FORM["phone"], "Стиральные машины",
         FORM["address"], FORM["problem"], "site", "new",
     )
 
 
-def test_request_without_fields_saves_nothing(client, orders_db_path):
-    """Пустая форма не должна оставлять заявку в очереди: иначе бот
-    пришлёт в Telegram пустышки."""
+def test_request_stores_device_title_not_code(client, orders_db_path):
+    """В очередь кладётся название прибора, а не его code: очередь читает
+    человек, и «Стиральные машины» понятнее, чем «washing»."""
+    client.post("/request", data=FORM)
+
+    with sqlite3.connect(orders_db_path) as conn:
+        device = conn.execute(
+            "SELECT device FROM orders ORDER BY id DESC LIMIT 1"
+        ).fetchone()[0]
+
+    assert device == "Стиральные машины"
+
+
+def test_request_without_optional_fields_is_accepted(client, orders_db_path):
+    """Адрес и описание проблемы необязательны: человек может не знать
+    адрес или ещё не понять, что сломалось."""
     before = orders_count(orders_db_path)
 
-    response = client.post("/request", data={}, follow_redirects=True)
+    response = client.post(
+        "/request",
+        data={"name": "Пётр", "phone": "+7 900 000-00-00", "device": "washing"},
+        follow_redirects=True,
+    )
+
+    assert "Заявка отправлена" in response.get_data(as_text=True)
+    assert orders_count(orders_db_path) == before + 1
+
+    with sqlite3.connect(orders_db_path) as conn:
+        address, problem = conn.execute(
+            "SELECT address, problem FROM orders ORDER BY id DESC LIMIT 1"
+        ).fetchone()
+
+    # Пустые строки, а не None: колонки объявлены NOT NULL.
+    assert address == ""
+    assert problem == ""
+
+
+def test_request_without_optional_fields_writes_empty_cells_in_csv(client, csv_path):
+    """CSV остаётся с пятью колонками, иначе строки разъедутся."""
+    client.post("/request", data={"name": "Пётр", "phone": "+7 900 000-00-00", "device": "fridge"})
+
+    with open(csv_path, encoding="utf-8", newline="") as handle:
+        rows = list(csv.reader(handle))
+
+    assert len(rows[-1]) == len(FORM_FIELDS)
+    assert rows[-1][FORM_FIELDS.index("address")] == ""
+    assert rows[-1][FORM_FIELDS.index("device")] == "Холодильники"
+
+
+@pytest.mark.parametrize("field", REQUIRED_FIELDS)
+def test_request_requires_each_required_field(client, orders_db_path, field):
+    """Каждое обязательное поле проверяется по отдельности."""
+    before = orders_count(orders_db_path)
+    data = {**FORM, field: ""}
+
+    response = client.post("/request", data=data, follow_redirects=True)
 
     assert orders_count(orders_db_path) == before
-    body = response.get_data(as_text=True)
-    assert "Заполни" in body
-    assert "Заявка отправлена" not in body
+    assert "Заполни" in response.get_data(as_text=True)
+
+
+@pytest.mark.parametrize("field", OPTIONAL_FIELDS)
+def test_optional_fields_are_not_required_in_html(client, field):
+    """Адрес и описание не должны мешать отправке и в самом браузере."""
+    body = client.get("/").get_data(as_text=True)
+    tag = re.search(rf'name="{field}"[^>]*', body).group(0)
+    assert "required" not in tag
+
+
+def test_request_rejects_device_outside_the_list(client, orders_db_path):
+    """Значение select можно подделать в обход формы — принимаем только
+    приборы из services.py, иначе в очередь попадёт мусор."""
+    before = orders_count(orders_db_path)
+
+    response = client.post(
+        "/request",
+        data={**FORM, "device": "<script>alert(1)</script>"},
+        follow_redirects=True,
+    )
+
+    assert orders_count(orders_db_path) == before
+    assert "Выбери прибор из списка" in response.get_data(as_text=True)
+
+
+def test_form_offers_exactly_the_services_from_the_catalogue(client):
+    """Список в форме и карточки услуг берутся из services.py, поэтому
+    разойтись не могут — проверяем, что оба места на месте."""
+    body = client.get("/").get_data(as_text=True)
+    # Первый option — пустое значение без кавычек, поэтому берём любой текст
+    # между value=" и ", включая пустую строку.
+    options = re.findall(r'<option value="([^"]*)"', body)
+
+    assert options == [""] + [s["code"] for s in SERVICES]
+    # Подпись option собирается в шаблоне, поэтому сверяем её с эталоном
+    # здесь, а не ищем в вёрстке.
+    for service in SERVICES:
+        assert f'{service["title"]} — {service["price"]}' in body
 
 
 def test_request_trims_whitespace(client, orders_db_path):
@@ -138,18 +226,22 @@ def test_request_get_is_not_allowed(client):
 # ---------- CSV ----------
 
 def test_csv_keeps_quotes_and_commas_intact(client, csv_path):
-    """Значение с запятой и кавычками не должно развалить строку CSV."""
-    tricky = 'Стиральная, "Бош"'
-    client.post("/request", data={**FORM, "device": tricky})
+    """Значение с запятой и кавычками не должно развалить строку CSV.
+
+    Проверяем на problem: device принимает только значения из списка
+    услуг, а любое другое отклоняется ещё до записи.
+    """
+    tricky = 'Не сливает, "очень тихо"'
+    client.post("/request", data={**FORM, "problem": tricky})
 
     # Заголовка в файле нет: это выгрузка для чтения глазами, а не таблица
     # для импорта. Поэтому читаем позициями в порядке FORM_FIELDS.
     with open(csv_path, encoding="utf-8", newline="") as handle:
         rows = list(csv.reader(handle))
 
-    assert rows[-1][FORM_FIELDS.index("device")] == tricky
-    # Апостроф защиты от формул в обычных значениях быть не должно.
-    assert rows[-1][FORM_FIELDS.index("device")] == tricky
+    # Без экранирования значение развалилось бы на две ячейки.
+    assert rows[-1][FORM_FIELDS.index("problem")] == tricky
+    assert len(rows[-1]) == len(FORM_FIELDS)
 
 
 def test_csv_neutralises_spreadsheet_formulas(client, csv_path):

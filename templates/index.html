@@ -178,57 +178,9 @@
             </p>
         </header>
 
-        {% set services = [
-            {
-                'title': 'Стиральные машины',
-                'img': 'img/services/washing.svg',
-                'alt': 'Стиральная машина',
-                'price': 'от 900 ₽',
-                'items': ['Не сливает воду', 'Сильно шумит и вибрирует', 'Не греет воду', 'Ошибки на дисплее', 'Течёт из люка'],
-                'note': 'Замена подшипников, ТЭНа, манжеты, насоса'
-            },
-            {
-                'title': 'Холодильники',
-                'img': 'img/services/fridge.svg',
-                'alt': 'Двухкамерный холодильник',
-                'price': 'от 800 ₽',
-                'items': ['Не морозит', 'Слишком сильно морозит', 'Компрессор не отключается', 'Течёт вода', 'Шумит и вибрирует'],
-                'note': 'Заправка фреоном, замена компрессора и термостата'
-            },
-            {
-                'title': 'Плиты и духовки',
-                'img': 'img/services/stove.svg',
-                'alt': 'Плита с духовкой',
-                'price': 'от 700 ₽',
-                'items': ['Не греет', 'Не работает конфорка', 'Духовка не держит жар', 'Не щёлкает переключатель', 'Выбивает автомат'],
-                'note': 'Ремонт нагревателей, проводки и блока управления'
-            },
-            {
-                'title': 'Микроволновки',
-                'img': 'img/services/microwave.svg',
-                'alt': 'Микроволновая печь',
-                'price': 'от 700 ₽',
-                'items': ['Не греет', 'Не крутится поддон', 'Не работают кнопки', 'Искрит внутри', 'Не закрывается дверца'],
-                'note': 'Замена магнетрона, слюды, платы и дверных замков'
-            },
-            {
-                'title': 'Посудомоечные машины',
-                'img': 'img/services/dishwasher.svg',
-                'alt': 'Посудомоечная машина',
-                'price': 'от 1 000 ₽',
-                'items': ['Не набирает воду', 'Плохо моет', 'Течёт из-под дверцы', 'Не сливает воду', 'Остаётся вода в поддоне'],
-                'note': 'Чистка фильтров, замена циркуляционного насоса'
-            },
-            {
-                'title': 'Кондиционеры',
-                'img': 'img/services/air.svg',
-                'alt': 'Сплит-система',
-                'price': 'от 1 200 ₽',
-                'items': ['Не охлаждает', 'Течёт внутренний блок', 'Постоянно включается', 'Плохо дует', 'Шумит и вибрирует'],
-                'note': 'Чистка дренажа, вакуумирование, заправка фреоном'
-            }
-        ] %}
-
+        {# Список приборов приходит из services.py: те же данные показываются
+           в выпадающем списке формы. Держать здесь копию — значит со временем
+           забыть обновить одну из двух. #}
         <div class="cards">
             {% for s in services %}
             <article class="card reveal" data-delay="{{ loop.index * 70 }}">
@@ -484,25 +436,43 @@
 
                 <form action="{{ url_for('make_request') }}" method="POST" class="request-form" novalidate data-request-form>
                     <div class="field">
-                        <input type="text" id="name" name="name" placeholder=" " required>
+                        <input type="text" id="name" name="name" placeholder=" " required autocomplete="name">
                         <label for="name">Ваше имя</label>
                     </div>
                     <div class="field">
-                        <input type="tel" id="phone" name="phone" placeholder=" " required data-phone>
+                        <input type="tel" id="phone" name="phone" placeholder=" " required data-phone autocomplete="tel">
                         <label for="phone">Телефон</label>
                     </div>
-                    <div class="field">
-                        <input type="text" id="device" name="device" placeholder=" " required>
+
+                    {# Список приборов тот же, что и в карточках услуг: приходят
+                       из services.py, поэтому предлагает только то, что сервис
+                       действительно ремонтирует.
+                       Лейбла стоит перед полем, а не после, как у остальных:
+                       у select нет placeholder, подпись не всплывает. #}
+                    <div class="field field--full field--select">
                         <label for="device">Какой прибор сломался</label>
+                        <select id="device" name="device" required>
+                            <option value="" selected disabled hidden>Выберите прибор</option>
+                            {% for s in services %}
+                            <option value="{{ s.code }}">{{ s.title }} — {{ s.price }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
-                    <div class="field">
-                        <input type="text" id="address" name="address" placeholder=" " required>
-                        <label for="address">Адрес выезда</label>
+
+                    {# Два поля необязательные: без них заявка всё равно уходит,
+                       мастер перезвонит и уточнит детали. #}
+                    <div class="field field--full">
+                        <input type="text" id="address" name="address" placeholder=" " autocomplete="street-address">
+                        <label for="address">Адрес выезда <span class="field__hint">— необязательно</span></label>
                     </div>
                     <div class="field field--full">
-                        <textarea id="problem" name="problem" placeholder=" " rows="4" required></textarea>
-                        <label for="problem">Опишите проблему</label>
+                        <textarea id="problem" name="problem" placeholder=" " rows="4"></textarea>
+                        <label for="problem">Опишите проблему <span class="field__hint">— необязательно</span></label>
                     </div>
+
+                    <p class="field__note">
+                        Достаточно имени и телефона. Остальное мастер уточнит по телефону.
+                    </p>
 
                     <button type="submit" class="btn btn-primary btn-block">
                         <span class="btn__text">Отправить заявку</span>

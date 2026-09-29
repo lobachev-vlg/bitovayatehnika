@@ -29,10 +29,20 @@ from config import (
 from device import detect_device
 from orders.store import add_order, init_db as init_orders_db
 from paths import data_file
+from services import SERVICES, is_known, title_for
 from visits.store import init_db, log_visit
 
 # Поля формы в том же порядке, в котором пишем их в CSV.
 FORM_FIELDS = ("name", "phone", "device", "address", "problem")
+
+# Обязательные поля. Адрес и описание проблемы необязательны: человек
+# может не знать адрес (например, звонит с чужого телефона) или ещё не
+# понять, что сломалось, — и не должен терять заявку из-за пустых полей.
+REQUIRED_FIELDS = ("name", "phone", "device")
+
+# Их наличие в форме не проверяем. Порядок совпадает с FORM_FIELDS: по нему
+# пишется CSV, и пропуск поля сдвинул бы колонки.
+OPTIONAL_FIELDS = ("address", "problem")
 
 # Что показывать в сообщении об ошибке, если поле не заполнено.
 FIELD_LABELS = {
@@ -80,6 +90,9 @@ def template_context(**extra):
         "phone_tel": SITE_PHONE_TEL,
         "device": detect_device(request.headers.get("User-Agent", "")),
         "base_url": site_base_url(request.host_url),
+        # Список приборов общий для карточек услуг и для выпадающего списка
+        # в форме: в двух местах он обязан совпадать.
+        "services": SERVICES,
     }
     context.update(extra)
     return context
@@ -217,10 +230,16 @@ def make_request():
     а сообщение об успехе показывается через flash.
     """
     values = {field: request.form.get(field, "").strip() for field in FORM_FIELDS}
-    missing = [FIELD_LABELS[field] for field in FORM_FIELDS if not values[field]]
+    missing = [FIELD_LABELS[field] for field in REQUIRED_FIELDS if not values[field]]
 
     if missing:
         flash(f"Заполни: {', '.join(missing)}")
+        return redirect("/")
+
+    # Прибор приходит как code из списка услуг. Значение можно подделать
+    # в обход формы, поэтому проверяем по справочнику, а не на вид.
+    if not is_known(values["device"]):
+        flash("Выбери прибор из списка")
         return redirect("/")
 
     try:
@@ -230,7 +249,9 @@ def make_request():
         order_id = add_order(
             name=values["name"],
             phone=values["phone"],
-            device=values["device"],
+            # В очередь кладём название прибора, а не code: очередь и CSV
+            # читает человек, и «Стиральные машины» понятнее, чем «washing».
+            device=title_for(values["device"]),
             address=values["address"],
             problem=values["problem"],
             source="site",
@@ -241,8 +262,11 @@ def make_request():
         return redirect("/")
 
     try:
+        # В CSV пишем то же, что в очередь, иначе две копии заявки
+        # разошлись бы по содержанию.
+        row = dict(values, device=title_for(values["device"]))
         with open(data_file("requests.csv"), "a", encoding="utf-8") as f:
-            f.write(",".join(csv_field(values[field]) for field in FORM_FIELDS) + "\n")
+            f.write(",".join(csv_field(row[field]) for field in FORM_FIELDS) + "\n")
     except OSError:
         # CSV — копия для удобства, очередь уже создана, поэтому заявка не теряется.
         app.logger.exception("Заявка #%s не попала в requests.csv", order_id)

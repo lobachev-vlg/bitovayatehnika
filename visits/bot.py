@@ -26,7 +26,12 @@ if __package__ in (None, ""):
 
 import telebot  # noqa: E402  — импорт после правки sys.path, так и задумано
 
-from config import VISITS_ADMIN_CHAT_ID, VISITS_BOT_TOKEN, check_visits_config  # noqa: E402
+from config import (  # noqa: E402
+    VISITS_ADMIN_CHAT_ID,
+    VISITS_BOT_TOKEN,
+    chat_access_error,
+    check_visits_config,
+)
 from device import device_label  # noqa: E402
 from visits.store import (  # noqa: E402
     LIST_LIMIT,
@@ -222,6 +227,12 @@ if __name__ == "__main__":
     check_visits_config()
 
     log(f"Отчёты будут уходить в чат {VISITS_ADMIN_CHAT_ID}")
+    # Чат может быть недоступен, даже если id верный: пока пользователь
+    # сам не начал диалог с ботом, Telegram отвечает «chat not found».
+    # Проверяем один раз при старте, чтобы не гадать о причине по логу.
+    problem = chat_access_error(bot, VISITS_ADMIN_CHAT_ID)
+    if problem:
+        log("ВНИМАНИЕ: " + problem)
     for period in PERIODS:
         _, boundary = current_window(period)
         # Отчёт в boundary придёт по окну, которое закроется в этот момент.

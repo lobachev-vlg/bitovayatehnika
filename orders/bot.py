@@ -33,6 +33,7 @@ from config import (  # noqa: E402
     ORDERS_ADMIN_CHAT_ID,
     REQUESTS_BOT_TOKEN,
     SITE_URL,
+    chat_access_error,
     check_requests_config,
 )
 from orders.store import (  # noqa: E402
@@ -224,6 +225,11 @@ if __name__ == "__main__":
     check_requests_config()
 
     log(f"Заявки будут уходить в чат {ORDERS_ADMIN_CHAT_ID}")
+    # Верного id мало: бот не напишет в чат, пока пользователь не начал
+    # с ним диалог. Проверяем при старте, чтобы причина была видна сразу.
+    problem = chat_access_error(bot, ORDERS_ADMIN_CHAT_ID)
+    if problem:
+        log("ВНИМАНИЕ: " + problem)
     log(f"Опрос очереди раз в {POLL_SECONDS} с")
     threading.Thread(target=queue_watcher, daemon=True).start()
 
